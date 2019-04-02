@@ -29,3 +29,7 @@ end
 appraise 'active-record-5.2' do
   gem 'activerecord', '5.2.0'
 end
+
+appraise "rails-6.0beta3" do
+  gem "rails", git: 'https://github.com/rails/rails.git', tag: "v6.0.0.beta3"
+end
