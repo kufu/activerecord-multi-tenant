@@ -52,10 +52,10 @@ module Arel
       # Clone the query, clear its projections, and set its projection to the primary key of the table
       subquery = arel.clone
       subquery.projections.clear
-      subquery = subquery.project(table[primary_key])
+      subquery = subquery.project(table['id'])
 
       # Create an IN condition node with the primary key of the table and the subquery
-      Arel::Nodes::In.new(table[primary_key], subquery.ast)
+      Arel::Nodes::In.new(table['id'], subquery.ast)
     end
   end
 end
