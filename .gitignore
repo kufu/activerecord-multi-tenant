@@ -2,11 +2,3 @@ spec/debug.log
 pkg/
 *.rb#
 *.*~
-Gemfile.lock
-*.gemfile.lock
-.idea/
-.vagrant/
-Vagrantfile
-coverage/
-docs/build/
-.yardoc/

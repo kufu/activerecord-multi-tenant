@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'spec_helper'
 
 describe MultiTenant, 'Record modifications' do
@@ -7,6 +5,7 @@ describe MultiTenant, 'Record modifications' do
   let(:account2) { Account.create! name: 'test2' }
   let(:project) { Project.create! name: 'something', account: account }
   let(:project2) { Project.create! name: 'something2', account: account2, id: project.id }
+
 
   it 'includes the tenant_id in DELETEs when using object.destroy' do
     # two records with same id but different account_id
@@ -17,7 +16,7 @@ describe MultiTenant, 'Record modifications' do
     expect(project2.account).to eq(account2)
     expect(project.id).to eq(project2.id)
 
-    MultiTenant.without do
+    MultiTenant.without() do
       expect(Project.count).to eq(2)
       project.destroy
       expect(Project.count).to eq(1)
@@ -29,6 +28,7 @@ describe MultiTenant, 'Record modifications' do
     MultiTenant.with(account2) do
       expect(Project.where(id: project2.id).first).to be_present
     end
+
   end
 
   it 'includes the tenant_id in DELETEs when using object.delete' do
@@ -40,7 +40,7 @@ describe MultiTenant, 'Record modifications' do
     expect(project2.account).to eq(account2)
     expect(project.id).to eq(project2.id)
 
-    MultiTenant.without do
+    MultiTenant.without() do
       expect(Project.count).to eq(2)
       project.delete
       expect(Project.count).to eq(1)
@@ -52,25 +52,6 @@ describe MultiTenant, 'Record modifications' do
     MultiTenant.with(account2) do
       expect(Project.where(id: project2.id).first).to be_present
     end
-  end
-
-  it 'should not update other objects with same id when calling object.update_columns' do
-    # When two records with same id but different account_id are updated, it should only update the current one
-    expect(project.account).to eq(account)
-    expect(project2.account).to eq(account2)
-    expect(project.id).to eq(project2.id)
-
-    MultiTenant.without do
-      project2.update_columns(name: 'newthing2')
-      expect(project.reload.name).to eq('something')
-      expect(project2.reload.name).to eq('newthing2')
-    end
-  end
-
-  it 'should return the same object when calling object.reload' do
-    # When two records with same id but different account_id are updated, it should not return the other object
-    expect(project.reload.account_id).to eq(account.id)
-    expect(project2.reload.account_id).to eq(account2.id)
   end
 
   it 'test delete for reference tables' do

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # Resets the database, except when we are only running a specific spec
 ARGV.grep(/\w+_spec\.rb/).empty? && ActiveRecord::Schema.define(version: 1) do
   enable_extension_on_all_nodes 'uuid-ossp'
@@ -9,7 +7,6 @@ ARGV.grep(/\w+_spec\.rb/).empty? && ActiveRecord::Schema.define(version: 1) do
     t.column :name, :string
     t.column :subdomain, :string
     t.column :domain, :string
-    t.column :password, :string
   end
 
   create_table :projects, force: true, partition_key: :account_id do |t|
@@ -30,28 +27,10 @@ ARGV.grep(/\w+_spec\.rb/).empty? && ActiveRecord::Schema.define(version: 1) do
     t.column :completed, :boolean
   end
 
-  create_table :managers_tasks, force: true, partition_key: :account_id do |t|
-    t.column :account_id, :integer
-    t.column :manager_id, :integer
-    t.column :task_id, :integer
-  end
-
-  create_table :managers_projects, force: true do |t|
-    t.column :project_id, :integer
-    t.column :manager_id, :integer
-  end
-
   create_table :sub_tasks, force: true, partition_key: :account_id do |t|
     t.column :account_id, :integer
     t.column :name, :string
     t.column :task_id, :integer
-    t.column :type, :string
-  end
-
-  create_table :optional_sub_tasks, force: true do |t|
-    t.references :account, :integer
-    t.column :sub_task_id, :integer
-    t.column :name, :string
     t.column :type, :string
   end
 
@@ -155,7 +134,6 @@ class Account < ActiveRecord::Base
   multi_tenant :account
   has_many :projects
   has_one :manager, inverse_of: :account
-  has_many :optional_sub_tasks
 end
 
 class Project < ActiveRecord::Base
@@ -166,7 +144,6 @@ class Project < ActiveRecord::Base
 
   has_many :project_categories
   has_many :categories, through: :project_categories
-  has_and_belongs_to_many :managers
 
   validates_uniqueness_of :name, scope: [:account]
 end
@@ -174,15 +151,12 @@ end
 class Manager < ActiveRecord::Base
   multi_tenant :account
   belongs_to :project
-  has_and_belongs_to_many :tasks, tenant_column: :account_id, tenant_enabled: true,
-                                  tenant_class_name: 'Account'
 end
 
 class Task < ActiveRecord::Base
   multi_tenant :account
   belongs_to :project
   has_many :sub_tasks
-  has_and_belongs_to_many :managers, tenant_column: :account_id, tenant_enabled: true
 
   validates_uniqueness_of :name
 end
@@ -191,14 +165,6 @@ class SubTask < ActiveRecord::Base
   multi_tenant :account
   belongs_to :task
   has_one :project, through: :task
-  has_many :optional_sub_tasks
-end
-
-with_belongs_to_required_by_default do
-  class OptionalSubTask < ActiveRecord::Base
-    multi_tenant :account, optional: true
-    belongs_to :sub_task
-  end
 end
 
 class StiSubTask < SubTask
@@ -234,11 +200,10 @@ end
 class Comment < ActiveRecord::Base
   multi_tenant :account
   belongs_to :commentable, polymorphic: true
-  belongs_to :task, -> { where(comments: { commentable_type: 'Task' }) }, foreign_key: 'commentable_id'
+  belongs_to :task, -> { where(comments: { commentable_type: 'Task'  }) }, foreign_key: 'commentable_id'
 end
 
 class Organization < ActiveRecord::Base
-  multi_tenant :organization
   has_many :uuid_records
 end
 
@@ -247,7 +212,7 @@ class UuidRecord < ActiveRecord::Base
 end
 
 class Category < ActiveRecord::Base
-  has_many :project_categories
+  has_many  :project_categories
   has_many :projects, through: :project_categories
 end
 

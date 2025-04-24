@@ -1,5 +1,4 @@
-# activerecord-multi-tenant 
-[![Build Status](https://github.com/citusdata/activerecord-multi-tenant/actions/workflows/active-record-multi-tenant-tests.yml/badge.svg)](https://github.com/citusdata/activerecord-multi-tenant/actions/workflows/active-record-multi-tenant-tests.yml) [![codecov](https://codecov.io/gh/citusdata/activerecord-multi-tenant/branch/master/graph/badge.svg?token=rw0TsEk4Ld)](https://codecov.io/gh/citusdata/activerecord-multi-tenant) [ ![Gems Version](https://img.shields.io/gem/v/activerecord-multi-tenant.svg)](https://rubygems.org/gems/activerecord-multi-tenant)[ ![Gem Download Count](https://img.shields.io/gem/dt/activerecord-multi-tenant.svg)](https://rubygems.org/gems/activerecord-multi-tenant) [![Documentation Status](https://readthedocs.org/projects/activerecord-multi-tenant/badge/?version=latest)](https://activerecord-multi-tenant.readthedocs.io/en/latest/?badge=latest) 
+# activerecord-multi-tenant [ ![](https://img.shields.io/gem/v/activerecord-multi-tenant.svg)](https://rubygems.org/gems/activerecord-multi-tenant) [ ![](https://img.shields.io/gem/dt/activerecord-multi-tenant.svg)](https://rubygems.org/gems/activerecord-multi-tenant)
 
 Introduction Post: https://www.citusdata.com/blog/2017/01/05/easily-scale-out-multi-tenant-apps/
 
@@ -17,7 +16,7 @@ gem 'activerecord-multi-tenant'
 
 ## Supported Rails versions
 
-All Ruby on Rails versions starting with 6.0 or newer (up to 7.0) are supported.
+All Ruby on Rails versions starting with 4.2 or newer (up to 6.0) are supported.
 
 This gem only supports ActiveRecord (the Rails default ORM), and not alternative ORMs like Sequel.
 
