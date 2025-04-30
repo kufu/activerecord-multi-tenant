@@ -149,9 +149,11 @@ module MultiTenant
       MultiTenant.multi_tenant_model_for_table(table_name).present?
     end
 
+    # rubocop:disable Lint/UselessConstantScoping
     DISPATCH = Hash.new do |hash, klass|
       hash[klass] = "visit_#{(klass.name || '').gsub('::', '_')}"
     end
+    # rubocop:enable Lint/UselessConstantScoping
 
     def dispatch
       DISPATCH
