@@ -198,6 +198,7 @@ module MultiTenant
     end
 
     DISPATCH = dispatch_cache
+    private_constant :DISPATCH
 
     # rubocop:disable Naming/AccessorMethodName
     def get_dispatch_cache

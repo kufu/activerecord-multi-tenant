@@ -153,6 +153,8 @@ module MultiTenant
       hash[klass] = "visit_#{(klass.name || '').gsub('::', '_')}"
     end
 
+    private_constant :DISPATCH
+
     def dispatch
       DISPATCH
     end
