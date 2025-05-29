@@ -197,7 +197,9 @@ module MultiTenant
       end
     end
 
+    # rubocop:disable Lint/UselessConstantScoping
     DISPATCH = dispatch_cache
+    # rubocop:enable Lint/UselessConstantScoping
 
     # rubocop:disable Naming/AccessorMethodName
     def get_dispatch_cache
