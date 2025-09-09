@@ -277,4 +277,60 @@ describe 'Query Rewriter' do
       ).to eq([page_in_alive_domain.id])
     end
   end
+
+  context 'when using composite primary keys' do
+    let!(:account) { Account.create!(name: 'Test Account') }
+    let!(:composite1) { CompositeKeyModel.create!(account: account, entity_id: 1, version: 1, name: 'Record 1') }
+    let!(:composite2) { CompositeKeyModel.create!(account: account, entity_id: 2, version: 1, name: 'Record 2') }
+
+    before(:each) do
+      @queries = []
+      ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _started, _finished, _unique_id, payload|
+        @queries << payload[:sql]
+      end
+    end
+
+    after(:each) do
+      ActiveSupport::Notifications.unsubscribe('sql.active_record')
+    end
+
+    it 'delete_all works with composite primary keys' do
+      expect do
+        MultiTenant.with(account) do
+          CompositeKeyModel.delete_all
+        end
+      end.to change { CompositeKeyModel.count }.from(2).to(0)
+
+      # Verify the generated SQL is correct for composite primary keys
+      delete_query = @queries.find { |q| q.include?('DELETE FROM "composite_key_models"') }
+      expect(delete_query).to be_present
+      # Should NOT contain malformed primary key like ["account_id", "entity_id", "version"]
+      expect(delete_query).not_to include('[""account_id"", ""entity_id"", ""version""]')
+      # Should contain proper IN condition with all three columns
+      expected = <<~SQL.strip
+        ("composite_key_models"."account_id", "composite_key_models"."entity_id", "composite_key_models"."version") IN
+      SQL
+      expect(delete_query).to include(expected)
+    end
+
+    it 'update_all works with composite primary keys' do
+      MultiTenant.with(account) do
+        CompositeKeyModel.update_all(name: 'Updated Name')
+      end
+
+      expect(composite1.reload.name).to eq('Updated Name')
+      expect(composite2.reload.name).to eq('Updated Name')
+
+      # Verify the generated SQL is correct for composite primary keys
+      update_query = @queries.find { |q| q.include?('UPDATE "composite_key_models"') }
+      expect(update_query).to be_present
+      # Should NOT contain malformed primary key like ["account_id", "entity_id", "version"]
+      expect(update_query).not_to include('[""account_id"", ""entity_id"", ""version""]')
+      # Should contain proper IN condition with all three columns
+      expected = <<~SQL.strip
+        ("composite_key_models"."account_id", "composite_key_models"."entity_id", "composite_key_models"."version") IN
+      SQL
+      expect(update_query).to include(expected)
+    end
+  end
 end
