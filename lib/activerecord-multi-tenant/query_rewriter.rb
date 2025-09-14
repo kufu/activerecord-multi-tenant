@@ -136,12 +136,12 @@ module MultiTenant
       end
     end
 
-    # rubocop:enable Naming/MethodName
-
     alias visit_Arel_Nodes_FullOuterJoin visit_Arel_Nodes_OuterJoin
     alias visit_Arel_Nodes_RightOuterJoin visit_Arel_Nodes_OuterJoin
 
     alias visit_ActiveModel_Attribute terminal
+
+    # rubocop:enable Naming/MethodName
 
     private
 
