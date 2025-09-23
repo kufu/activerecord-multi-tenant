@@ -72,7 +72,6 @@ module MultiTenant
   module SchemaStatementsExtensions
     def create_table(table_name, options = {}, &block)
       ret = super(table_name, **options.except(:partition_key), &block)
-      # Citus requires that the partition_key be set as the PRIMARY KEY.
       # If an explicit primary_key is set, it is assumed to contain the partition_key.
       if options[:id] != false &&
          options[:partition_key] &&
