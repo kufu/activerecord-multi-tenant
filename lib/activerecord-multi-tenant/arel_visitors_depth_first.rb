@@ -14,6 +14,8 @@ module MultiTenant
       @block.call obj
     end
 
+    # rubocop:disable Naming/MethodName
+
     def unary(obj)
       visit obj.expr
     end
@@ -47,8 +49,6 @@ module MultiTenant
     alias visit_Arel_Nodes_Max    function
     alias visit_Arel_Nodes_Min    function
     alias visit_Arel_Nodes_Sum    function
-
-    # rubocop:disable Naming/MethodName
 
     def visit_Arel_Nodes_NamedFunction(obj)
       visit obj.name
