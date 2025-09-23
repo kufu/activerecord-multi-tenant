@@ -72,13 +72,19 @@ module MultiTenant
   module SchemaStatementsExtensions
     def create_table(table_name, options = {}, &block)
       ret = super(table_name, **options.except(:partition_key), &block)
-      # If an explicit primary_key is set, it is assumed to contain the partition_key.
-      if options[:id] != false &&
-         options[:partition_key] &&
-         options[:partition_key].to_s != 'id' &&
-         !options[:primary_key]
+      if options[:id] != false && options[:partition_key] && options[:partition_key].to_s != 'id'
         execute "ALTER TABLE #{table_name} DROP CONSTRAINT #{table_name}_pkey"
-        execute "ALTER TABLE #{table_name} ADD PRIMARY KEY(\"#{options[:partition_key]}\", id)"
+
+        primary_key_columns = [options[:partition_key]]
+        if options[:primary_key].is_a?(Array)
+          primary_key_columns += options[:primary_key]
+        else
+          primary_key_columns << :id
+        end
+        # Remove duplicates while preserving order (partition_key comes first)
+        primary_key_columns = primary_key_columns.uniq
+        quoted_columns = primary_key_columns.map { "\"#{_1}\"" }
+        execute "ALTER TABLE #{table_name} ADD PRIMARY KEY(#{quoted_columns.join(', ')})"
       end
       ret
     end
