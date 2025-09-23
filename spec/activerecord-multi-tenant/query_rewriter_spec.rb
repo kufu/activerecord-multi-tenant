@@ -304,11 +304,9 @@ describe 'Query Rewriter' do
       # Verify the generated SQL is correct for composite primary keys
       delete_query = @queries.find { |q| q.include?('DELETE FROM "composite_key_models"') }
       expect(delete_query).to be_present
-      # Should NOT contain malformed primary key like ["account_id", "entity_id", "version"]
-      expect(delete_query).not_to include('[""account_id"", ""entity_id"", ""version""]')
-      # Should contain proper IN condition with all three columns
+      expect(delete_query).not_to include('[""entity_id"", ""version""]')
       expected = <<~SQL.strip
-        ("composite_key_models"."account_id", "composite_key_models"."entity_id", "composite_key_models"."version") IN
+        ("composite_key_models"."entity_id", "composite_key_models"."version") IN
       SQL
       expect(delete_query).to include(expected)
     end
@@ -324,11 +322,9 @@ describe 'Query Rewriter' do
       # Verify the generated SQL is correct for composite primary keys
       update_query = @queries.find { |q| q.include?('UPDATE "composite_key_models"') }
       expect(update_query).to be_present
-      # Should NOT contain malformed primary key like ["account_id", "entity_id", "version"]
-      expect(update_query).not_to include('[""account_id"", ""entity_id"", ""version""]')
-      # Should contain proper IN condition with all three columns
+      expect(update_query).not_to include('[""entity_id"", ""version""]')
       expected = <<~SQL.strip
-        ("composite_key_models"."account_id", "composite_key_models"."entity_id", "composite_key_models"."version") IN
+        ("composite_key_models"."entity_id", "composite_key_models"."version") IN
       SQL
       expect(update_query).to include(expected)
     end

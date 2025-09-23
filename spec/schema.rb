@@ -75,7 +75,7 @@ ARGV.grep(/\w+_spec\.rb/).empty? && ActiveRecord::Schema.define(version: 1) do
   end
 
   create_table :composite_key_models, force: true, partition_key: :account_id,
-                                      primary_key: %i[account_id entity_id version] do |t|
+                                      primary_key: %i[entity_id version] do |t|
     t.column :account_id, :integer
     t.column :entity_id, :integer
     t.column :version, :integer
@@ -282,7 +282,7 @@ end
 
 class CompositeKeyModel < ActiveRecord::Base
   multi_tenant :account
-  self.primary_key = %i[account_id entity_id version]
+  self.primary_key = %i[entity_id version]
 end
 
 class Domain < ActiveRecord::Base
