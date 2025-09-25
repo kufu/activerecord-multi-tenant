@@ -76,14 +76,14 @@ module MultiTenant
         execute "ALTER TABLE #{table_name} DROP CONSTRAINT #{table_name}_pkey"
 
         primary_key_columns = [options[:partition_key]]
-        if options[:primary_key].is_a?(Array)
-          primary_key_columns += options[:primary_key]
+        if options[:primary_key].present?
+          primary_key_columns += Array.wrap(options[:primary_key])
         else
           primary_key_columns << :id
         end
         # Remove duplicates while preserving order (partition_key comes first)
         primary_key_columns = primary_key_columns.uniq
-        quoted_columns = primary_key_columns.map { "\"#{_1}\"" }
+        quoted_columns = primary_key_columns.map { ActiveRecord::Base.connection.quote_column_name(_1) }
         execute "ALTER TABLE #{table_name} ADD PRIMARY KEY(#{quoted_columns.join(', ')})"
       end
       ret
