@@ -286,11 +286,17 @@ describe 'Query Rewriter' do
       # Verify the generated SQL is correct for composite primary keys
       delete_query = @queries.find { |q| q.include?('DELETE FROM "composite_key_models"') }
       expect(delete_query).to be_present
-      expect(delete_query).not_to include('[""entity_id"", ""version""]')
-      expected = <<~SQL.strip
-        ("composite_key_models"."entity_id", "composite_key_models"."version") IN
+
+      expected_query = <<~SQL.strip
+        DELETE FROM "composite_key_models"
+        WHERE ("composite_key_models"."entity_id", "composite_key_models"."version") IN (
+          SELECT "composite_key_models"."entity_id", "composite_key_models"."version"
+          FROM "composite_key_models"
+          WHERE "composite_key_models"."account_id" = #{account.id}
+        ) AND "composite_key_models"."account_id" = #{account.id}
       SQL
-      expect(delete_query).to include(expected)
+
+      expect(format_sql(delete_query)).to eq(format_sql(expected_query))
     end
 
     it 'update_all works with composite primary keys' do
@@ -304,11 +310,18 @@ describe 'Query Rewriter' do
       # Verify the generated SQL is correct for composite primary keys
       update_query = @queries.find { |q| q.include?('UPDATE "composite_key_models"') }
       expect(update_query).to be_present
-      expect(update_query).not_to include('[""entity_id"", ""version""]')
-      expected = <<~SQL.strip
-        ("composite_key_models"."entity_id", "composite_key_models"."version") IN
+
+      expected_query = <<~SQL.strip
+        UPDATE "composite_key_models"
+        SET "name" = 'Updated Name'
+        WHERE ("composite_key_models"."entity_id", "composite_key_models"."version") IN (
+          SELECT "composite_key_models"."entity_id", "composite_key_models"."version"
+          FROM "composite_key_models"
+          WHERE "composite_key_models"."account_id" = #{account.id}
+        ) AND "composite_key_models"."account_id" = #{account.id}
       SQL
-      expect(update_query).to include(expected)
+
+      expect(format_sql(update_query)).to eq(format_sql(expected_query))
     end
   end
 end
