@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.0.0'
   spec.metadata = { 'rubygems_mfa_required' => 'true' }
 
-  spec.files = `git ls-files`.split("\n")
+  spec.files = Dir['lib/**/*', 'LICENSE', 'README.md', 'CHANGELOG.md']
   spec.require_paths = ['lib']
   spec.homepage = 'https://github.com/citusdata/activerecord-multi-tenant'
   spec.license = 'MIT'
