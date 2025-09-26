@@ -74,6 +74,12 @@ ARGV.grep(/\w+_spec\.rb/).empty? && ActiveRecord::Schema.define(version: 1) do
     t.column :project_alias_id, :integer
   end
 
+  create_table :specify_primary_key_models, force: true, partition_key: :account_id, primary_key: :entity_id do |t|
+    t.column :account_id, :integer
+    # t.column :entity_id, :integer (Excluded - would be a duplicate column since entity_id is already the primary key.)
+    t.column :name, :string
+  end
+
   create_table :composite_key_models, force: true, partition_key: :account_id,
                                       primary_key: %i[entity_id version] do |t|
     t.column :account_id, :integer
@@ -277,6 +283,10 @@ class ProjectCategory < ActiveRecord::Base
 end
 
 class AllowedPlace < ActiveRecord::Base
+  multi_tenant :account
+end
+
+class SpecifyPrimaryKeyModel < ActiveRecord::Base
   multi_tenant :account
 end
 

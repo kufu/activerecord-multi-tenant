@@ -97,4 +97,25 @@ describe MultiTenant, 'Record finding' do
       end
     end
   end
+
+  it 'supports custom primary key' do
+    account = Account.create! name: 'test'
+    record = nil
+    MultiTenant.with(account) do
+      record = SpecifyPrimaryKeyModel.create! name: 'something'
+    end
+    MultiTenant.with(account) do
+      expect(SpecifyPrimaryKeyModel.find(record.entity_id)).to be_present
+    end
+  end
+
+  it 'supports composite primary keys' do
+    account = Account.create! name: 'test'
+    MultiTenant.with(account) do
+      CompositeKeyModel.create! entity_id: 1, version: 1, name: 'something'
+    end
+    MultiTenant.with(account) do
+      expect(CompositeKeyModel.find([1, 1])).to be_present
+    end
+  end
 end
