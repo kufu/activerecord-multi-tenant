@@ -73,16 +73,23 @@ module MultiTenant
     def create_table(table_name, options = {}, &block)
       ret = super(table_name, **options.except(:partition_key), &block)
       if options[:id] != false && options[:partition_key] && options[:partition_key].to_s != 'id'
+        primary_keys = Array.wrap(options[:primary_key])
+
+        unless primary_keys.empty?
+          partition_key = options[:partition_key].to_s
+          if primary_keys.any? { |pk| pk.to_s == partition_key }
+            raise ArgumentError, 'Do not include partition_key in primary_key'
+          end
+        end
+
         execute "ALTER TABLE #{table_name} DROP CONSTRAINT #{table_name}_pkey"
 
         primary_key_columns = [options[:partition_key]]
-        if options[:primary_key].present?
-          primary_key_columns += Array.wrap(options[:primary_key])
-        else
+        if primary_keys.empty?
           primary_key_columns << :id
+        else
+          primary_key_columns += primary_keys
         end
-        # Remove duplicates while preserving order (partition_key comes first)
-        primary_key_columns = primary_key_columns.uniq
         quoted_columns = primary_key_columns.map { ActiveRecord::Base.connection.quote_column_name(_1) }
         execute "ALTER TABLE #{table_name} ADD PRIMARY KEY(#{quoted_columns.join(', ')})"
       end
