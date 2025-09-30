@@ -245,24 +245,6 @@ module MultiTenant
   end
 
   module DatabaseStatements
-    def join_to_update(update, *args)
-      update = super
-      model = MultiTenant.multi_tenant_model_for_table(MultiTenant::TableNode.table_name(update.ast.relation))
-      if model.present? && !MultiTenant.with_write_only_mode_enabled? && MultiTenant.current_tenant_id.present?
-        update.where(MultiTenant::TenantEnforcementClause.new(model.arel_table[model.partition_key]))
-      end
-      update
-    end
-
-    def join_to_delete(delete, *args)
-      delete = super
-      model = MultiTenant.multi_tenant_model_for_table(MultiTenant::TableNode.table_name(delete.ast.left))
-      if model.present? && !MultiTenant.with_write_only_mode_enabled? && MultiTenant.current_tenant_id.present?
-        delete.where(MultiTenant::TenantEnforcementClause.new(model.arel_table[model.partition_key]))
-      end
-      delete
-    end
-
     def update(arel, name = nil, binds = [])
       model = MultiTenant.multi_tenant_model_for_arel(arel)
       if model.present? && !MultiTenant.with_write_only_mode_enabled? && MultiTenant.current_tenant_id.present?
