@@ -10,6 +10,10 @@ describe 'Query Rewriter' do
     end
   end
 
+  after(:each) do
+    ActiveSupport::Notifications.unsubscribe('sql.active_record')
+  end
+
   context 'when bulk updating' do
     let!(:account) { Account.create!(name: 'Test Account') }
     let!(:project) { Project.create(name: 'Project 1', account: account) }
@@ -112,17 +116,6 @@ describe 'Query Rewriter' do
     let!(:project3) { Project.create(name: 'Project 3', account: account) }
     let!(:manager1) { Manager.create(name: 'Manager 1', project: project1, account: account) }
     let!(:manager2) { Manager.create(name: 'Manager 2', project: project2, account: account) }
-
-    before(:each) do
-      @queries = []
-      ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _started, _finished, _unique_id, payload|
-        @queries << payload[:sql]
-      end
-    end
-
-    after(:each) do
-      ActiveSupport::Notifications.unsubscribe('sql.active_record')
-    end
 
     it 'delete_all the records' do
       expected_query = <<-SQL.strip
@@ -275,6 +268,60 @@ describe 'Query Rewriter' do
           Page.joins(:domain).pluck(:id)
         end
       ).to eq([page_in_alive_domain.id])
+    end
+  end
+
+  context 'when using composite primary keys' do
+    let!(:account) { Account.create!(name: 'Test Account') }
+    let!(:composite1) { CompositeKeyModel.create!(account: account, entity_id: 1, version: 1, name: 'Record 1') }
+    let!(:composite2) { CompositeKeyModel.create!(account: account, entity_id: 2, version: 1, name: 'Record 2') }
+
+    it 'delete_all works with composite primary keys' do
+      expect do
+        MultiTenant.with(account) do
+          CompositeKeyModel.delete_all
+        end
+      end.to change { CompositeKeyModel.count }.from(2).to(0)
+
+      # Verify the generated SQL is correct for composite primary keys
+      delete_query = @queries.find { |q| q.include?('DELETE FROM "composite_key_models"') }
+      expect(delete_query).to be_present
+
+      expected_query = <<~SQL.strip
+        DELETE FROM "composite_key_models"
+        WHERE ("composite_key_models"."entity_id", "composite_key_models"."version") IN (
+          SELECT "composite_key_models"."entity_id", "composite_key_models"."version"
+          FROM "composite_key_models"
+          WHERE "composite_key_models"."account_id" = #{account.id}
+        ) AND "composite_key_models"."account_id" = #{account.id}
+      SQL
+
+      expect(format_sql(delete_query)).to eq(format_sql(expected_query))
+    end
+
+    it 'update_all works with composite primary keys' do
+      MultiTenant.with(account) do
+        CompositeKeyModel.update_all(name: 'Updated Name')
+      end
+
+      expect(composite1.reload.name).to eq('Updated Name')
+      expect(composite2.reload.name).to eq('Updated Name')
+
+      # Verify the generated SQL is correct for composite primary keys
+      update_query = @queries.find { |q| q.include?('UPDATE "composite_key_models"') }
+      expect(update_query).to be_present
+
+      expected_query = <<~SQL.strip
+        UPDATE "composite_key_models"
+        SET "name" = 'Updated Name'
+        WHERE ("composite_key_models"."entity_id", "composite_key_models"."version") IN (
+          SELECT "composite_key_models"."entity_id", "composite_key_models"."version"
+          FROM "composite_key_models"
+          WHERE "composite_key_models"."account_id" = #{account.id}
+        ) AND "composite_key_models"."account_id" = #{account.id}
+      SQL
+
+      expect(format_sql(update_query)).to eq(format_sql(expected_query))
     end
   end
 end
