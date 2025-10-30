@@ -51,14 +51,24 @@ jobs:
           - rails_7.1
           - rails_7.2
           - rails_8.0
+          - sidekiq_7_rails_7.1
+          - sidekiq_7_rails_7.2
+          - sidekiq_7_rails_8.0
         citus_version:
           - "10"
           - "11"
           - "12"
         exclude:
           # Rails 8.0 requires Ruby >= 3.2
+          # Sidekiq 8.0 requires Ruby >= 3.2
+          - ruby: "3.1"
+            appraisal: rails_7.1
+          - ruby: "3.1"
+            appraisal: rails_7.2
           - ruby: "3.1"
             appraisal: rails_8.0
+          - ruby: "3.1"
+            appraisal: sidekiq_7_rails_8.0
     name: Ruby ${{ matrix.ruby }} / ${{ matrix.appraisal }} / Citus ${{ matrix.citus_version }}
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.appraisal }}.gemfile

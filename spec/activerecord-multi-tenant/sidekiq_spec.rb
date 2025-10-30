@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'sidekiq/client'
+require 'sidekiq/testing'
 require 'activerecord-multi-tenant/sidekiq'
 
 describe MultiTenant, 'Sidekiq' do

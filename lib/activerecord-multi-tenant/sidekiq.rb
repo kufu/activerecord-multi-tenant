@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sidekiq/client'
+require 'activerecord-multi-tenant/sidekiq_transaction_aware_client'
 
 # Adds methods to handle tenant information both in the client and server.
 module Sidekiq::Middleware::MultiTenant
