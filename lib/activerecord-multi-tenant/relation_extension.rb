@@ -43,6 +43,8 @@ module Arel
       # Build an Arel query
       arel = if eager_loading?
                apply_join_dependency.arel
+             elsif ActiveRecord.gem_version >= Gem::Version.create('8.1.0')
+               arel()
              elsif ActiveRecord.gem_version >= Gem::Version.create('7.2.0')
                build_arel(klass.connection)
              else
