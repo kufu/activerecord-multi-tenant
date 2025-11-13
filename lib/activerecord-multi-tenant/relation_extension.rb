@@ -44,6 +44,8 @@ module Arel
       arel = if eager_loading?
                apply_join_dependency.arel
              elsif ActiveRecord.gem_version >= Gem::Version.create('8.1.0')
+               # In Rails 8.1, `update_all` and `delete_all` call `arel` internally to avoid rebuilding the AST.
+               # See: https://github.com/rails/rails/pull/55585
                arel()
              elsif ActiveRecord.gem_version >= Gem::Version.create('7.2.0')
                build_arel(klass.connection)

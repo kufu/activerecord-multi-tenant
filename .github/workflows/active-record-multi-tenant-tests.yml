@@ -56,10 +56,10 @@ jobs:
           - sidekiq_7_rails_7.2
           - sidekiq_7_rails_8.0
           - sidekiq_7_rails_8.1
-        citus_version:
-          - "10"
-          - "11"
-          - "12"
+        postgresql_version:
+          - "14"
+          - "15"
+          - "16"
         exclude:
           # Rails 8.0 requires Ruby >= 3.2
           # Sidekiq 8.0 requires Ruby >= 3.2
@@ -75,14 +75,14 @@ jobs:
             appraisal: rails_8.1
           - ruby: "3.1"
             appraisal: sidekiq_7_rails_8.1
-    name: Ruby ${{ matrix.ruby }} / ${{ matrix.appraisal }} / Citus ${{ matrix.citus_version }}
+    name: Ruby ${{ matrix.ruby }} / ${{ matrix.appraisal }} / PostgreSQL ${{ matrix.postgresql_version }}
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.appraisal }}.gemfile
-      CITUS_VERSION: ${{ matrix.citus_version }}
+      POSTGRES_VERSION: ${{ matrix.postgresql_version }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start Citus Database environment
+      - name: Start PostgreSQL Database environment
         run: docker compose up -d
 
       - uses: ruby/setup-ruby@v1
