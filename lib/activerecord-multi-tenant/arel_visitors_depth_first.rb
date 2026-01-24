@@ -39,29 +39,50 @@ module MultiTenant
     alias visit_Arel_Nodes_OptimizerHints    unary
     alias visit_Arel_Nodes_ValuesList        unary
 
-    def function(obj)
-      visit obj.expressions
-      visit obj.alias
-      visit obj.distinct
+    # From Rails 8.1, Arel::Nodes::Function no longer has an alias attribute
+    # cf. https://github.com/rails/rails/pull/54824
+    if ActiveRecord.gem_version < Gem::Version.new('8.1')
+      def function(obj)
+        visit obj.expressions
+        visit obj.alias
+        visit obj.distinct
+      end
+
+      def visit_Arel_Nodes_NamedFunction(obj)
+        visit obj.name
+        visit obj.expressions
+        visit obj.distinct
+        visit obj.alias
+      end
+
+      def visit_Arel_Nodes_Count(obj)
+        visit obj.expressions
+        visit obj.alias
+        visit obj.distinct
+      end
+    else
+      def function(obj)
+        visit obj.expressions
+        visit obj.distinct
+      end
+
+      def visit_Arel_Nodes_NamedFunction(obj)
+        visit obj.name
+        visit obj.expressions
+        visit obj.distinct
+      end
+
+      def visit_Arel_Nodes_Count(obj)
+        visit obj.expressions
+        visit obj.distinct
+      end
     end
+
     alias visit_Arel_Nodes_Avg    function
     alias visit_Arel_Nodes_Exists function
     alias visit_Arel_Nodes_Max    function
     alias visit_Arel_Nodes_Min    function
     alias visit_Arel_Nodes_Sum    function
-
-    def visit_Arel_Nodes_NamedFunction(obj)
-      visit obj.name
-      visit obj.expressions
-      visit obj.distinct
-      visit obj.alias
-    end
-
-    def visit_Arel_Nodes_Count(obj)
-      visit obj.expressions
-      visit obj.alias
-      visit obj.distinct
-    end
 
     def visit_Arel_Nodes_Case(obj)
       visit obj.case

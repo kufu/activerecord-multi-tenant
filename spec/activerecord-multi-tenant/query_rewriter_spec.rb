@@ -365,4 +365,48 @@ describe 'Query Rewriter' do
       expect(format_sql(update_query)).to eq(format_sql(expected_query))
     end
   end
+
+  context 'when using functions / named functions with Arel' do
+    let!(:account) { Account.create!(name: 'Test Account') }
+    let!(:projects) { 3.times { |i| Project.create!(name: "Project #{i + 1}", account: account) } }
+
+    it 'handles COUNT in HAVING clause with tenant enforcement' do
+      table = Project.arel_table
+
+      result = MultiTenant.with(account) do
+        Project.select(table[:account_id])
+               .group(table[:account_id])
+               .having(table[:id].count.gt(2))
+               .to_a
+      end
+
+      expect(result.length).to eq(1)
+      expect(result.first.account_id).to eq(account.id)
+    end
+
+    it 'handles SUM in HAVING clause with tenant enforcement' do
+      table = Project.arel_table
+
+      result = MultiTenant.with(account) do
+        Project.select(table[:account_id])
+               .group(table[:account_id])
+               .having(table[:id].sum.gt(0))
+               .to_a
+      end
+
+      expect(result.length).to eq(1)
+    end
+
+    it 'handles NamedFunction in WHERE clause with tenant enforcement' do
+      table = Project.arel_table
+      lower_func = Arel::Nodes::NamedFunction.new('LOWER', [table[:name]])
+
+      result = MultiTenant.with(account) do
+        Project.where(lower_func.eq('project 1')).to_a
+      end
+
+      expect(result.length).to eq(1)
+      expect(result.first.name).to eq('Project 1')
+    end
+  end
 end
