@@ -49,7 +49,7 @@ describe 'Query Rewriter' do
 
     it 'update_all the records with expected query' do
       expected_query = <<-SQL.strip
-          UPDATE "projects" SET "name" = 'New Name' WHERE "projects"."id" IN
+          UPDATE "projects" SET "name" = 'New Name' WHERE ("projects"."id") IN
             (SELECT "projects"."id" FROM "projects"
                 INNER JOIN "managers" ON "managers"."project_id" = "projects"."id"
                                     and "managers"."account_id" = :account_id
@@ -67,7 +67,9 @@ describe 'Query Rewriter' do
       @queries.each do |actual_query|
         next unless actual_query.include?('UPDATE "projects" SET "name"')
 
-        expect(format_sql(actual_query)).to eq(format_sql(expected_query.gsub(':account_id', account.id.to_s)))
+        expect(format_sql(actual_query.gsub('$1', "'New Name'"))).to eq(format_sql(expected_query.gsub(
+                                                                                     ':account_id', account.id.to_s
+                                                                                   )))
       end
     end
 
@@ -83,7 +85,7 @@ describe 'Query Rewriter' do
         SET
           "name" = 'New Name'
         WHERE
-          "projects"."id" IN (
+          ("projects"."id") IN (
             SELECT
               "projects"."id"
             FROM
@@ -103,8 +105,9 @@ describe 'Query Rewriter' do
       @queries.each do |actual_query|
         next unless actual_query.include?('UPDATE "projects" SET "name"')
 
-        expect(format_sql(actual_query.gsub('$1',
-                                            limit.to_s)).strip).to eq(format_sql(expected_query).strip)
+        expect(
+          format_sql(actual_query.gsub('$1', "'#{new_name}'").gsub('$2', limit.to_s)).strip
+        ).to eq(format_sql(expected_query).strip)
       end
     end
   end
@@ -119,7 +122,7 @@ describe 'Query Rewriter' do
 
     it 'delete_all the records' do
       expected_query = <<-SQL.strip
-          DELETE FROM "projects" WHERE "projects"."id" IN
+          DELETE FROM "projects" WHERE ("projects"."id") IN
             (SELECT "projects"."id" FROM "projects"
                 INNER JOIN "managers" ON "managers"."project_id" = "projects"."id"
                                     and "managers"."account_id" = :account_id
@@ -172,7 +175,7 @@ describe 'Query Rewriter' do
         DELETE FROM
           "projects"
         WHERE
-          "projects"."id" IN (
+          ("projects"."id") IN (
             SELECT
               "projects"."id"
             FROM
