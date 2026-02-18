@@ -247,7 +247,10 @@ module MultiTenant
   module DatabaseStatements
     def update(arel, name = nil, binds = [])
       model = MultiTenant.multi_tenant_model_for_arel(arel)
-      if model.present? && !MultiTenant.with_write_only_mode_enabled? && MultiTenant.current_tenant_id.present?
+      if model.present? &&
+         !MultiTenant.with_write_only_mode_enabled? &&
+         MultiTenant.current_tenant_id.present? &&
+         !already_has_tenant_enforcement_clause?(arel)
         arel.where(MultiTenant::TenantEnforcementClause.new(model.arel_table[model.partition_key]))
       end
       super
@@ -255,10 +258,21 @@ module MultiTenant
 
     def delete(arel, name = nil, binds = [])
       model = MultiTenant.multi_tenant_model_for_arel(arel)
-      if model.present? && !MultiTenant.with_write_only_mode_enabled? && MultiTenant.current_tenant_id.present?
+      if model.present? &&
+         !MultiTenant.with_write_only_mode_enabled? &&
+         MultiTenant.current_tenant_id.present? &&
+         !already_has_tenant_enforcement_clause?(arel)
         arel.where(MultiTenant::TenantEnforcementClause.new(model.arel_table[model.partition_key]))
       end
       super
+    end
+
+    private
+
+    def already_has_tenant_enforcement_clause?(arel)
+      arel.try(:ast).try(:wheres).to_a.any? do |where|
+        where.is_a?(MultiTenant::BaseTenantEnforcementClause)
+      end
     end
   end
 end
