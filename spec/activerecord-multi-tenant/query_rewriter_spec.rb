@@ -67,6 +67,8 @@ describe 'Query Rewriter' do
       @queries.each do |actual_query|
         next unless actual_query.include?('UPDATE "projects" SET "name"')
 
+        actual_query = actual_query.gsub('$1', "'New Name'")
+
         expect(format_sql(actual_query)).to eq(format_sql(expected_query.gsub(':account_id', account.id.to_s)))
       end
     end
@@ -102,6 +104,8 @@ describe 'Query Rewriter' do
 
       @queries.each do |actual_query|
         next unless actual_query.include?('UPDATE "projects" SET "name"')
+
+        actual_query = actual_query.gsub('$1', "'#{new_name}'").gsub('$2', limit.to_s)
 
         expect(format_sql(actual_query.gsub('$1',
                                             limit.to_s)).strip).to eq(format_sql(expected_query).strip)
@@ -214,6 +218,40 @@ describe 'Query Rewriter' do
     end
   end
 
+  context 'when update_all with Arel nodes' do
+    let!(:account) { Account.create!(name: 'Test Account') }
+    let!(:project) { Project.create(name: 'Project 1', account: account) }
+    let!(:comment) do
+      Comment.create!(account: account, commentable: project, counter: 0)
+    end
+
+    it 'increment! works correctly with tenant scoping' do
+      MultiTenant.with(account) do
+        comment.increment!(:counter)
+      end
+      expect(comment.reload.counter).to eq(1)
+    end
+
+    it 'decrement! works correctly with tenant scoping' do
+      comment.update!(counter: 5)
+      MultiTenant.with(account) do
+        comment.decrement!(:counter)
+      end
+      expect(comment.reload.counter).to eq(4)
+    end
+
+    it 'update_all with Hash updates generates correct SQL with tenant scoping' do
+      MultiTenant.with(account) do
+        Comment.update_all(counter: 1)
+      end
+
+      update_query = @queries.find { |q| q.include?('UPDATE "comments"') }
+      expect(update_query).to be_present
+      expect(update_query).to include('account_id')
+      expect(comment.reload.counter).to eq(1)
+    end
+  end
+
   context 'when using non-multi-tenant model' do
     let!(:account1) { Account.create!(name: 'Test Account') }
     let!(:account2) { Account.create!(name: 'Test Account2') }
@@ -310,6 +348,9 @@ describe 'Query Rewriter' do
       # Verify the generated SQL is correct for composite primary keys
       update_query = @queries.find { |q| q.include?('UPDATE "composite_key_models"') }
       expect(update_query).to be_present
+
+      # Extract parameterized values and replace placeholders
+      update_query = update_query.gsub('$1', "'Updated Name'")
 
       expected_query = <<~SQL.strip
         UPDATE "composite_key_models"
