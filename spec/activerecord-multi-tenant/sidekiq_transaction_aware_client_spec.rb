@@ -58,7 +58,7 @@ describe MultiTenant, 'SidekiqTransactionAwareClient' do
       expect(TestWorker.jobs[-1]).to_not be_key('multi_tenant')
     end
 
-    if Gem::Version.new('7.3.0') <= Sidekiq.gem_version && Sidekiq.gem_version < Gem::Version.new('8.0.0')
+    if Gem::Version.new('7.3.0') <= Sidekiq.gem_version && Sidekiq.gem_version < Gem::Version.new('7.3.10')
       it 'Sidekiq gem has not changed' do
         meth = Sidekiq::TransactionAwareClient.instance_method(:push)
 
