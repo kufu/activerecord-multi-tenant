@@ -60,11 +60,7 @@ module MultiTenant
     end
   end
 
-  class ArelTenantVisitor < if Arel::Visitors.const_defined?(:DepthFirst)
-                              Arel::Visitors::DepthFirst
-                            else
-                              ::MultiTenant::ArelVisitorsDepthFirst
-                            end
+  class ArelTenantVisitor < ArelVisitorsDepthFirst
     def initialize(arel)
       super(proc {})
       @statement_node_id = nil
