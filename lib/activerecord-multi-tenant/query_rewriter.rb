@@ -304,7 +304,7 @@ module MultiTenant
                           node.source.right
                         end
 
-            node_list.select { |n| n.is_a? Arel::Nodes::Join }.each do |node_join|
+            node_list.grep(Arel::Nodes::Join).each do |node_join|
               next unless node_join.right
 
               relation_right, relation_left = relations_from_node_join(node_join)
