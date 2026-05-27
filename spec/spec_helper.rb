@@ -72,7 +72,6 @@ RSpec.configure do |config|
   end
 end
 
-# rubocop:disable Lint/UnusedMethodArgument
 # changing the name of the parameter breaks tests
 def with_belongs_to_required_by_default(&block)
   default_value = ActiveRecord::Base.belongs_to_required_by_default
@@ -81,5 +80,5 @@ def with_belongs_to_required_by_default(&block)
 ensure
   ActiveRecord::Base.belongs_to_required_by_default = default_value
 end
-# rubocop:enable Lint/UnusedMethodArgument
+
 require 'schema'
