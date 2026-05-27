@@ -13,11 +13,11 @@ jobs:
   static-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
           ruby-version: ruby
           bundler-cache: true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Rubocop static code analysis
         run: |
           gem install rubocop
@@ -25,10 +25,10 @@ jobs:
   doc_checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
         with:
           python-version: 3.9
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install python dependencies
         run: |
           pip install -r docs/requirements.txt
@@ -63,12 +63,12 @@ jobs:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.appraisal }}.gemfile
       POSTGRES_VERSION: ${{ matrix.postgresql_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Start PostgreSQL Database environment
         run: docker compose up -d
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -77,4 +77,4 @@ jobs:
         run: bundle exec rake spec
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # v3.1.6
