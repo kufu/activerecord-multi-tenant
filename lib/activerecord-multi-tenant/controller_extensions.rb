@@ -12,11 +12,10 @@ module MultiTenant
 
         private
 
-        # rubocop:disable Naming/AccessorMethodName
+        # rubocop:disable-next Naming/AccessorMethodName
         def set_current_tenant(current_tenant_object)
           MultiTenant.current_tenant = current_tenant_object
         end
-        # rubocop:enable Naming/AccessorMethodName
 
         def current_tenant
           MultiTenant.current_tenant
