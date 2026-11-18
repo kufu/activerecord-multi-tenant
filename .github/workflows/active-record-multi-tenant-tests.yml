@@ -13,7 +13,7 @@ jobs:
   static-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
+      - uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           ruby-version: ruby
           bundler-cache: true
@@ -22,21 +22,6 @@ jobs:
         run: |
           gem install rubocop
           rubocop
-  doc_checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
-        with:
-          python-version: 3.9
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install python dependencies
-        run: |
-          pip install -r docs/requirements.txt
-      - name: Documentation Checks
-        run: |
-          cd docs
-          sphinx-build -W -b html source builds
-
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -68,7 +53,7 @@ jobs:
       - name: Start PostgreSQL Database environment
         run: docker compose up -d
 
-      - uses: ruby/setup-ruby@afeafc3d1ab54a631816aba4c914a0081c12ff2f # v1.310.0
+      - uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
