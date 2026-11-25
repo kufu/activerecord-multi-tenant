@@ -42,17 +42,23 @@ module MultiTenant
                                         .try(:instance_variable_get, :@partition_key)
           end
 
-          def reset_primary_key
-            primary_object_keys = Array.wrap(connection.schema_cache.primary_keys(table_name)) - [partition_key]
+          # Rails 8.2 infers the primary key in SchemaContext#inferred_primary_key instead (see SchemaContextExtensions)
+          if ActiveRecord.gem_version < Gem::Version.create('8.2.0.alpha')
+            def reset_primary_key
+              self.primary_key = primary_key_without_partition_key(connection.schema_cache.primary_keys(table_name))
+            end
+          end
 
-            self.primary_key = if primary_object_keys.size == 1
-                                 primary_object_keys.first
-                               elsif primary_object_keys.size > 1
-                                 primary_object_keys
-                               elsif table_name &&
-                                     connection.schema_cache.columns_hash(table_name).include?(DEFAULT_ID_FIELD)
-                                 DEFAULT_ID_FIELD
-                               end
+          def primary_key_without_partition_key(primary_keys) # :nodoc:
+            primary_object_keys = Array.wrap(primary_keys) - [partition_key]
+
+            if primary_object_keys.size == 1
+              primary_object_keys.first
+            elsif primary_object_keys.size > 1
+              primary_object_keys
+            elsif table_name && connection.schema_cache.columns_hash(table_name).include?(DEFAULT_ID_FIELD)
+              DEFAULT_ID_FIELD
+            end
           end
 
           def inherited(subclass)
@@ -207,3 +213,18 @@ module MultiTenant
 end
 
 ActiveRecord::Associations::Association.prepend(MultiTenant::AssociationExtensions)
+
+module MultiTenant
+  module SchemaContextExtensions
+    def inferred_primary_key
+      primary_key = super
+      return primary_key unless model_class.respond_to?(:scoped_by_tenant?) && model_class.scoped_by_tenant?
+
+      model_class.primary_key_without_partition_key(primary_key)
+    end
+  end
+end
+
+if ActiveRecord.gem_version >= Gem::Version.create('8.2.0.alpha')
+  ActiveRecord::ModelSchema::SchemaContext.prepend(MultiTenant::SchemaContextExtensions)
+end
